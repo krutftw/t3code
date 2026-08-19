@@ -831,7 +831,7 @@ const cloudPreferencesHandler = Effect.fn("environment.cloud.preferences")(
   ),
 );
 
-const connectAuthStateHandler = Effect.fn("environment.cloud.authState")(function* (
+export const connectAuthStateHandler = Effect.fn("environment.cloud.authState")(function* (
   dependencies: CloudHttpDependencies,
 ) {
   yield* requireEnvironmentScope(AuthRelayReadScope);
@@ -839,7 +839,7 @@ const connectAuthStateHandler = Effect.fn("environment.cloud.authState")(functio
     .clientAuthState) satisfies EnvironmentConnectAuthState;
 }, Effect.catchTags(cloudCliTokenManagerErrorHandlers));
 
-const connectAuthLoginHandler = Effect.fn("environment.cloud.authLogin")(function* (
+export const connectAuthLoginHandler = Effect.fn("environment.cloud.authLogin")(function* (
   dependencies: CloudHttpDependencies,
 ) {
   yield* requireEnvironmentScope(AuthRelayWriteScope);
@@ -848,7 +848,7 @@ const connectAuthLoginHandler = Effect.fn("environment.cloud.authLogin")(functio
     .clientAuthState) satisfies EnvironmentConnectAuthState;
 }, Effect.catchTags(cloudCliTokenManagerErrorHandlers));
 
-const connectAuthCodeHandler = Effect.fn("environment.cloud.authCode")(function* (
+export const connectAuthCodeHandler = Effect.fn("environment.cloud.authCode")(function* (
   dependencies: CloudHttpDependencies,
   payload: { readonly code: string },
 ) {
@@ -861,7 +861,7 @@ const connectAuthCodeHandler = Effect.fn("environment.cloud.authCode")(function*
     .clientAuthState) satisfies EnvironmentConnectAuthState;
 }, Effect.catchTags(cloudCliTokenManagerErrorHandlers));
 
-const connectAuthLogoutHandler = Effect.fn("environment.cloud.authLogout")(function* (
+export const connectAuthLogoutHandler = Effect.fn("environment.cloud.authLogout")(function* (
   dependencies: CloudHttpDependencies,
 ) {
   yield* requireEnvironmentScope(AuthRelayWriteScope);
@@ -870,9 +870,15 @@ const connectAuthLogoutHandler = Effect.fn("environment.cloud.authLogout")(funct
     .clientAuthState) satisfies EnvironmentConnectAuthState;
 }, Effect.catchTags(cloudCliTokenManagerErrorHandlers));
 
-const connectAuthTokenHandler = Effect.fn("environment.cloud.authToken")(function* (
+export const connectAuthTokenHandler = Effect.fn("environment.cloud.authToken")(function* (
   dependencies: CloudHttpDependencies,
 ) {
+  // Deliberately reachable by any admin-scoped session, local or remote:
+  // admin sessions belong to the environment owner, and remote admin access
+  // already implies control of this credential (it could link and unlink at
+  // will). Served with no-store headers. No origin restriction on purpose —
+  // linkProof's origin check pins the advertised endpoint, it does not gate
+  // the caller.
   yield* requireEnvironmentScope(AuthRelayWriteScope);
   const token = yield* dependencies.cliTokenManager.getExisting;
   if (Option.isNone(token)) {
